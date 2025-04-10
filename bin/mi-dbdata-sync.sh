@@ -106,7 +106,7 @@ validate_arguments() {
 # Function to get file checksum from Nexus
 get_checksum_from_nexus() {
   local path=${1}
-  local url="$NEXUS_BASE_URL/service/rest/v1/search?repository=${NEXUS_REPOSITORY}&name=${path}"
+  local url="$NEXUS_BASE_URL/service/rest/v1/search?repository=${NEXUS_REPOSITORY}&name=/${path}"
 
   # Use curl and jq to get the checksum from Nexus API
   local checksum=$(curl -s -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" -X GET "${url}" | jq -r '.items[0].assets[0].checksum.md5')
