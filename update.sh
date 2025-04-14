@@ -16,7 +16,7 @@ BUILD_VERSION=$(<VERSION)
 
 for MONGO_VERSION in "${IMAGE_VERSIONS}"; do
   echo "# Processing - Mongo: ${MONGO_VERSION}"
-  IMAGE_TAG="${BUILD_VERSION}-${MONGO_VERSION}"
+  IMAGE_TAG="${BUILD_VERSION}-mongo_${MONGO_VERSION}"
 
   # Create directory if it doesn't exist yet
   if [[ ! -d "${IMAGE_TAG}" ]]; then
