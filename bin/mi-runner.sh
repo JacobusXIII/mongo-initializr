@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Exit on error
-set -o pipefail
+set -eo pipefail
 
 # Default values
 DEFAULT_RUN_FOLDER="/runner"
