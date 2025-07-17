@@ -105,7 +105,7 @@ validate_arguments() {
 
 # Function to get file checksum from Nexus
 get_checksum_from_nexus() {
-  local path=${1}
+  local path="${1}"
   local url="$NEXUS_BASE_URL/service/rest/v1/search?repository=${NEXUS_REPOSITORY}&name=/${path}"
 
   # Use curl and jq to get the checksum from Nexus API
@@ -140,17 +140,13 @@ sync_file() {
     wget -O "${filename}" --no-verbose --user="${NEXUS_USERNAME}" --password="${NEXUS_PASSWORD}" "${NEXUS_BASE_URL}/repository/${NEXUS_REPOSITORY}/${path}"
 
     _log "> Downloaded"
-
-    gunzip --keep --force "${filename}"
-
-    _log "> Uncompressed"
   fi
 }
 
 # Function to add handle all entries in the input file
 handle_input_file() {
     jq -r '.[] | "\(.collection) \(.path)"' "${INPUT_FILE}" | while read collection path; do
-        _log "Processing file '${path}'"
+        _log "Processing dbdata file '${path}'"
         sync_file "${path}"
     done
 }

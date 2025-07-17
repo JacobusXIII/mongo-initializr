@@ -133,21 +133,20 @@ clean_database() {
 # Function to add handle all entries in the input file
 handle_input_file() {
     jq -r '.[] | "\(.collection) \(.path)"' "${INPUT_FILE}" | while read collection path; do
+        _log "Processing dbdata file '${path}'"
         add_json_to_collection "${collection}" "${path}"
     done
 }
 
 # Function to add JSON data to a collection
 add_json_to_collection() {
-    local collection=${1}
-    local filename="${DATA_FOLDER}/${2}"
-
-    _log "Processing file '${2}'."
+    local collection="${1}"
+    local filename="${DATA_FOLDER}/${2}.gz"
 
     # Check if the JSON filename exists
     if [[ -f "${filename}" ]]; then
         # Add JSON data to the collection. Use mongoimport to create the collection and add data
-        _mongoimport --collection ${collection} --file $filename --jsonArray --upsert --upsertFields "_id"
+        _mongoimport "${filename}" --collection ${collection} --jsonArray --upsert --upsertFields "_id"
 
         _log "'${filename}' is added to '${collection}'"
     else
