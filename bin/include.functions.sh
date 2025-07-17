@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Exit on error
-set -e
+set -o pipefail
 
 # Echo output colors
 GREEN='\033[0;32m'
