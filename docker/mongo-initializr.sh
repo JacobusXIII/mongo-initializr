@@ -18,20 +18,25 @@ _log() {
 sync_dbdata() {
   : ${MI_INPUT_FILE?'MI_INPUT_FILE must be provided'}
   : ${MI_DBDATA_FOLDER?'MI_DBDATA_FOLDER must be provided'}
-  : ${MI_NEXUS_BASE_URL?'MI_NEXUS_BASE_URL must be provided'}
-  : ${MI_NEXUS_REPOSITORY?'MI_NEXUS_REPOSITORY must be provided'}
-  : ${HTTPS_DATA_USERNAME?'HTTPS_DATA_USERNAME must be provided'}
-  : ${HTTPS_DATA_PASSWORD?'HTTPS_DATA_PASSWORD must be provided'}
+  : ${MI_PROVIDER:='nexus'}
+
+  if [[ "${MI_PROVIDER}" == "nexus" ]]; then
+    : ${MI_NEXUS_BASE_URL?'MI_NEXUS_BASE_URL must be provided'}
+    : ${MI_NEXUS_REPOSITORY?'MI_NEXUS_REPOSITORY must be provided'}
+    : ${MI_REPOSITORY_USERNAME?'MI_REPOSITORY_USERNAME must be provided'}
+    : ${MI_REPOSITORY_PASSWORD?'MI_REPOSITORY_PASSWORD must be provided'}
+  fi
 
   # Sync dbdata
   _log "Sync dbdata files"
   "${MI_BIN_FOLDER}/mi-dbdata-sync.sh" \
     --input-file "${MI_INPUT_FILE}" \
     --data-folder "${MI_DBDATA_FOLDER}" \
+    --provider "${MI_PROVIDER}" \
     --nexus-url "${MI_NEXUS_BASE_URL}" \
     --nexus-repo "${MI_NEXUS_REPOSITORY}" \
-    --nexus-username "${HTTPS_DATA_USERNAME}" \
-    --nexus-password "${HTTPS_DATA_PASSWORD}"
+    --nexus-username "${MI_REPOSITORY_USERNAME}" \
+    --nexus-password "${MI_REPOSITORY_PASSWORD}"
 }
 
 import_dbdata() {

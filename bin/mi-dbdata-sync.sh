@@ -6,10 +6,12 @@ set -eo pipefail
 # Default values
 DEFAULT_INPUT_FILE="/initdb.json"
 DEFAULT_DATA_FOLDER="/dbdata"
+DEFAULT_PROVIDER="nexus"
 
 
 INPUT_FILE="${DEFAULT_INPUT_FILE}"
 DATA_FOLDER="${DEFAULT_DATA_FOLDER}"
+PROVIDER_NAME="${DEFAULT_PROVIDER}"
 NEXUS_BASE_URL=""
 NEXUS_REPOSITORY=""
 NEXUS_USERNAME=""
@@ -40,6 +42,8 @@ display_help() {
     _log "  -i, --input-file [arg]     Specify input file (default: ${DEFAULT_INPUT_FILE})"
     _log "  -d, --data-folder [arg]    Specify data folder (default: ${DEFAULT_DATA_FOLDER})"
     _log
+    _log "      --provider [arg]       Specify provider (default: ${DEFAULT_PROVIDER})"
+    _log
     _log "      --nexus-url [arg]      Specify Nexus base URL"
     _log "      --nexus-repo [arg]     Specify Nexus repository"
     _log "      --nexus-username [arg] Specify Nexus username"
@@ -59,6 +63,10 @@ parse_arguments() {
                 ;;
             -d|--data-folder)
                 DATA_FOLDER="$2"
+                shift 2
+                ;;
+            --provider)
+                PROVIDER_NAME="$2"
                 shift 2
                 ;;
             --nexus-url)
@@ -90,29 +98,28 @@ parse_arguments() {
 
 # Function for validating the command line arguments
 validate_arguments() {
-    # Check if all nexus settings are set
-    if [[ -z "${NEXUS_BASE_URL}" ]] || [[ -z "${NEXUS_REPOSITORY}" ]] || [[ -z "${NEXUS_USERNAME}" ]] || [[ -z "${NEXUS_PASSWORD}" ]]; then
-        _log "Error: Nexus URL, repository, username, and password are required."
-        display_help
-    fi
-
     # Check if initdb input file exists
     if [[ ! -f "${INPUT_FILE}" ]]; then
         _log "Error: The input file '${INPUT_FILE}' does not exist."
         display_help
     fi
+
+    # Basic provider validation (provider script will assert provider-specific envs)
+    case "${PROVIDER_NAME}" in
+      nexus)
+        if [[ -z "${NEXUS_BASE_URL}" ]] || [[ -z "${NEXUS_REPOSITORY}" ]] || [[ -z "${NEXUS_USERNAME}" ]] || [[ -z "${NEXUS_PASSWORD}" ]]; then
+          _log "Error: Nexus URL, repository, username, and password are required for provider 'nexus'."
+          display_help
+        fi
+        ;;
+      *)
+        _log "Error: Unsupported provider '${PROVIDER_NAME}'."
+        display_help
+        ;;
+    esac
 }
 
-# Function to get file checksum from Nexus
-get_checksum_from_nexus() {
-  local path="${1}"
-  local url="$NEXUS_BASE_URL/service/rest/v1/search?repository=${NEXUS_REPOSITORY}&name=/${path}"
-
-  # Use curl and jq to get the checksum from Nexus API
-  local checksum=$(curl -s -u "${NEXUS_USERNAME}:${NEXUS_PASSWORD}" -X GET "${url}" | jq -r '.items[0].assets[0].checksum.md5')
-
-  echo ${checksum}
-}
+source "$SCRIPT_DIR/dbdata-provider.sh"
 
 # Function to download file if not exists or changed
 sync_file() {
@@ -122,7 +129,7 @@ sync_file() {
 
   # Check if the file exists locally
   if [[ -f "${filename}" ]]; then
-    local remote_checksum=$(get_checksum_from_nexus "${path}")
+    local remote_checksum=$(provider_get_checksum "${path}")
     local local_checksum=$(md5sum "${filename}" | awk '{print $1}')
 
     if [[ "${remote_checksum}" == "${local_checksum}" ]]; then
@@ -132,12 +139,12 @@ sync_file() {
     fi
   fi
 
-  # Download file from nexus if needed
+  # Download file if needed
   if [[ "${download}" = true ]]; then
     # Make sure directory exists
     mkdir -p "$(dirname "${filename}")"
 
-    wget -O "${filename}" --no-verbose --user="${NEXUS_USERNAME}" --password="${NEXUS_PASSWORD}" "${NEXUS_BASE_URL}/repository/${NEXUS_REPOSITORY}/${path}"
+    provider_download "${path}" "${filename}"
 
     _log "> Downloaded"
   fi

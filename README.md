@@ -11,7 +11,11 @@ By default the database is initialized on startup of the container using the Doc
 * `MONGO_INITDB_ROOT_USERNAME`, `MONGO_INITDB_ROOT_PASSWORD`: Username and password used for initializing and building the database (both default set to aerius).
 * `MONGO_INITDB_DATABASE`: The name of the database to initialize (default set to mongo).
 * `MI_INPUT_FILE`: The file which contains a list of dbdata-files and the corresponding database collection. If set the build and sync are executed.
-* `MI_NEXUS_BASE_URL`, `MI_NEXUS_REPOSITORY`: The base-url and nexus repository where the dbdata-files are located.
+* `MI_PROVIDER`: Selects the provider used to fetch dbdata-files (default: `nexus`).
+* When `MI_PROVIDER=nexus`:
+  * `MI_NEXUS_BASE_URL`: Base URL of the Nexus server.
+  * `MI_NEXUS_REPOSITORY`: Repository name containing the dbdata-files.
+  * `MI_REPOSITORY_USERNAME`, `MI_REPOSITORY_PASSWORD`: Credentials used to access the repository.
 * `MI_DATABASE_VERSION`: The version of the database, which will be added to the database constants. 
 * `MI_RUN_SCRIPT_FOLDER`: The folder there the `_run.js` file is located. If *not* set, the runner wil *not* be executed.
 * `MI_DUMP_DATABASE`: Set to `true` if a (gzipped) binary export of the database needs to be created.
@@ -21,7 +25,10 @@ By default the database is initialized on startup of the container using the Doc
 * `MI_BIN_FOLDER_CLEANUP`: Set to `true` if the bin-folder should be removed.
 * `MI_SOURCE_FOLDER_CLEANUP`: Set to `true` if the source-folder should be removed.
 * `MI_DBDATA_FOLDER_CLEANUP`: Set to `true` if the dbdata-folder should be removed.
-* `HTTPS_DATA_USERNAME`, `HTTPS_DATA_PASSWORD`: The username and password of the nexus repository used for syncing the dbdata-files.
+
+### Providers
+
+`MI_PROVIDER` controls where dbdata-files are fetched from. The default is `nexus`. Additional providers can be added by placing a script in `bin/providers/<provider>.sh` that implements the provider interface; set `MI_PROVIDER=<provider>` to use it.
 
 ### (Docker) Folders
 * `MI_BIN_FOLDER` (`/mi/bin`): Folder where you can find the `Mongo-Initializr` scripts.
@@ -40,12 +47,15 @@ docker run \
 	--env MI_RUN_SCRIPT_FOLDER="/mi/source/example-project/src/main" \
 	--env MONGO_INITDB_DATABASE=example \
 	--env MI_DATABASE_VERSION=0.0.1 \
+	--env MI_PROVIDER=nexus \
 	--env MI_NEXUS_BASE_URL=https://nexus.example-project.com \
 	--env MI_NEXUS_REPOSITORY=dbdata \
-	--env HTTPS_DATA_USERNAME=${HTTPS_DATA_USERNAME} \
-	--env HTTPS_DATA_PASSWORD=${HTTPS_DATA_PASSWORD} \
+    --env MI_REPOSITORY_USERNAME=${MI_REPOSITORY_USERNAME} \
+    --env MI_REPOSITORY_PASSWORD=${MI_REPOSITORY_PASSWORD} \
 	aerius-mongo-initializr:0.1-SNAPSHOT-7.0.6
 ```
+
+<br>
 
 <br>
 
@@ -77,6 +87,7 @@ ENV MONGO_INITDB_DATABASE=example \
     MI_INPUT_FILE="/mi/source/example-project/src/data/initdb.json" \
     MI_RUN_SCRIPT_FOLDER="/mi/source/example-project/src/main" \
     MI_INITIALIZE_ON_BUILD=false \
+    MI_PROVIDER=nexus \
     MI_NEXUS_BASE_URL="https://nexus.example-project.com" \
     MI_NEXUS_REPOSITORY=dbdata
 
@@ -93,8 +104,8 @@ docker run \
     --name example-project \
     --volume ./data:/data/db \
     --publish 27017:27017 \
-    --env HTTPS_DATA_USERNAME=user \
-    --env HTTPS_DATA_PASSWORD=passwd \
+    --env MI_REPOSITORY_USERNAME=user \
+    --env MI_REPOSITORY_PASSWORD=passwd \
     example-project:latest
 ```
 
@@ -114,10 +125,11 @@ ARG MONGO_INITDB_DATABASE=example-project \
 	MI_INPUT_FILE="/mi/source/example-project/src/data/initdb.json" \
 	MI_RUN_SCRIPT_FOLDER="/mi/source/example-project/src/main" \
 	MI_INITIALIZE_ON_BUILD=true \
+	MI_PROVIDER=nexus \
 	MI_NEXUS_BASE_URL="https://nexus.example-project.com" \
 	MI_NEXUS_REPOSITORY=dbdata \
-	HTTPS_DATA_USERNAME \
-	HTTPS_DATA_PASSWORD
+	MI_REPOSITORY_USERNAME \
+	MI_REPOSITORY_PASSWORD
 
 # Copy all necessary scripts
 COPY ./source /mi/source
