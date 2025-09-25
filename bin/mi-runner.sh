@@ -24,7 +24,7 @@ RUN_FILE="_run.js"
 
 
 # Include functions
-source "${SCRIPT_DIR}/include.functions.sh"
+source "${SCRIPT_DIR}/common.sh"
 
 
 # Function to display the banner

@@ -25,7 +25,7 @@ SCRIPT_DIR=$(dirname "${SCRIPT_PATH}")
 
 
 # Include functions
-source "${SCRIPT_DIR}/include.functions.sh"
+source "${SCRIPT_DIR}/common.sh"
 
 
 # Function to display the banner
