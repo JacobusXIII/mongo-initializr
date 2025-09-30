@@ -15,7 +15,8 @@ By default the database is initialized on startup of the container using the Doc
 * When `MI_PROVIDER=nexus`:
   * `MI_NEXUS_BASE_URL`: Base URL of the Nexus server.
   * `MI_NEXUS_REPOSITORY`: Repository name containing the dbdata-files.
-  * `MI_REPOSITORY_USERNAME`, `MI_REPOSITORY_PASSWORD`: Credentials used to access the repository.
+  * `MI_NEXUS_USERNAME`, `MI_NEXUS_PASSWORD`: Nexus credentials.
+    - Deprecated aliases (still supported): `HTTPS_DATA_USERNAME`/`HTTPS_DATA_PASSWORD`.
 * `MI_DATABASE_VERSION`: The version of the database, which will be added to the database constants. 
 * `MI_RUN_SCRIPT_FOLDER`: The folder there the `_run.js` file is located. If *not* set, the runner wil *not* be executed.
 * `MI_DUMP_DATABASE`: Set to `true` if a (gzipped) binary export of the database needs to be created.
@@ -48,14 +49,12 @@ docker run \
 	--env MONGO_INITDB_DATABASE=example \
 	--env MI_DATABASE_VERSION=0.0.1 \
 	--env MI_PROVIDER=nexus \
-	--env MI_NEXUS_BASE_URL=https://nexus.example-project.com \
-	--env MI_NEXUS_REPOSITORY=dbdata \
-    --env MI_REPOSITORY_USERNAME=${MI_REPOSITORY_USERNAME} \
-    --env MI_REPOSITORY_PASSWORD=${MI_REPOSITORY_PASSWORD} \
+    --env MI_NEXUS_BASE_URL=https://nexus.example-project.com \
+    --env MI_NEXUS_REPOSITORY=dbdata \
+    --env MI_NEXUS_USERNAME=${MI_NEXUS_USERNAME} \
+    --env MI_NEXUS_PASSWORD=${MI_NEXUS_PASSWORD} \
 	aerius-mongo-initializr:0.1-SNAPSHOT-7.0.6
 ```
-
-<br>
 
 <br>
 
@@ -104,8 +103,8 @@ docker run \
     --name example-project \
     --volume ./data:/data/db \
     --publish 27017:27017 \
-    --env MI_REPOSITORY_USERNAME=user \
-    --env MI_REPOSITORY_PASSWORD=passwd \
+    --env MI_NEXUS_USERNAME=user \
+    --env MI_NEXUS_PASSWORD=passwd \
     example-project:latest
 ```
 
@@ -127,9 +126,9 @@ ARG MONGO_INITDB_DATABASE=example-project \
 	MI_INITIALIZE_ON_BUILD=true \
 	MI_PROVIDER=nexus \
 	MI_NEXUS_BASE_URL="https://nexus.example-project.com" \
-	MI_NEXUS_REPOSITORY=dbdata \
-	MI_REPOSITORY_USERNAME \
-	MI_REPOSITORY_PASSWORD
+    MI_NEXUS_REPOSITORY=dbdata \
+    MI_NEXUS_USERNAME \
+    MI_NEXUS_PASSWORD
 
 # Copy all necessary scripts
 COPY ./source /mi/source

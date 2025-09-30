@@ -20,11 +20,22 @@ sync_dbdata() {
   : ${MI_DBDATA_FOLDER?'MI_DBDATA_FOLDER must be provided'}
   : ${MI_PROVIDER:='nexus'}
 
+  # Warn if deprecated HTTPS_DATA_* are in use
+  if [[ -n "${HTTPS_DATA_USERNAME:-}" || -n "${HTTPS_DATA_PASSWORD:-}" ]]; then
+    echo "WARNING: HTTPS_DATA_USERNAME/HTTPS_DATA_PASSWORD are deprecated; use provider-specific variables (e.g. MI_NEXUS_USERNAME/MI_NEXUS_PASSWORD)." >&2
+  fi
+
   if [[ "${MI_PROVIDER}" == "nexus" ]]; then
     : ${MI_NEXUS_BASE_URL?'MI_NEXUS_BASE_URL must be provided'}
     : ${MI_NEXUS_REPOSITORY?'MI_NEXUS_REPOSITORY must be provided'}
-    : ${MI_REPOSITORY_USERNAME?'MI_REPOSITORY_USERNAME must be provided'}
-    : ${MI_REPOSITORY_PASSWORD?'MI_REPOSITORY_PASSWORD must be provided'}
+    # Resolve Nexus credentials with backward compatibility (silent fallbacks)
+    MI_NEXUS_USERNAME="${MI_NEXUS_USERNAME:-${HTTPS_DATA_USERNAME:-}}"
+    MI_NEXUS_PASSWORD="${MI_NEXUS_PASSWORD:-${HTTPS_DATA_PASSWORD:-}}"
+
+    if [[ -z "${MI_NEXUS_USERNAME}" || -z "${MI_NEXUS_PASSWORD}" ]]; then
+      echo "ERROR: Nexus credentials not provided. Set MI_NEXUS_USERNAME/MI_NEXUS_PASSWORD (or deprecated HTTPS_DATA_*)." >&2
+      exit 1
+    fi
   fi
 
   # Sync dbdata
@@ -35,8 +46,8 @@ sync_dbdata() {
     --provider "${MI_PROVIDER}" \
     --nexus-url "${MI_NEXUS_BASE_URL}" \
     --nexus-repo "${MI_NEXUS_REPOSITORY}" \
-    --nexus-username "${MI_REPOSITORY_USERNAME}" \
-    --nexus-password "${MI_REPOSITORY_PASSWORD}"
+    --nexus-username "${MI_NEXUS_USERNAME}" \
+    --nexus-password "${MI_NEXUS_PASSWORD}"
 }
 
 import_dbdata() {
